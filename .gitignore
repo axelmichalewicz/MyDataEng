@@ -1,0 +1,9 @@
+#cache
+*__pycache__/
+
+#Env files
+/lambda_functions/spotify_daily/env
+.env
+
+#VSCode
+/.vscode

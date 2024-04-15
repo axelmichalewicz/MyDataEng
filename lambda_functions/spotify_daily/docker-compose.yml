@@ -1,0 +1,8 @@
+version: "3.0"
+
+services:
+  recommand:
+    build: .
+    container_name: recommand
+    env_file:
+      - .env
