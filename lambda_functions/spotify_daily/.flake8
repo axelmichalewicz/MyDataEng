@@ -1,0 +1,6 @@
+[flake8]
+ignore = ANN101,SIM106,B008,E203,W503,ANN401
+select = ANN,B,B9,BLK,C,E,F,S,W
+max-line-length = 120
+exclude=./data_api/db/migrations/versions/*, .git,__pycache__,__init__.py,.mypy_cache,.pytest_cache
+max-complexity = 19

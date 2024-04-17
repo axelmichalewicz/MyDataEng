@@ -44,9 +44,4 @@ class APIRequest:
         if method not in HttpMethodEnum:
             raise ValueError(f"Invalid Http Method: {method}")
 
-        return {
-            HttpMethodEnum.GET: httpx.get,
-            HttpMethodEnum.POST: httpx.post,
-        }.get(
-            method
-        )  # type: ignore
+        return {HttpMethodEnum.GET: httpx.get, HttpMethodEnum.POST: httpx.post}.get(method)  # type: ignore
