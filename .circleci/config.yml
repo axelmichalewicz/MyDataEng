@@ -2,17 +2,20 @@ version: 2.1
 
 orbs:
   python: circleci/python@2.1.1
+  node: circleci/node@5.2.0
   aws-cli: circleci/aws-cli@2.0.6
-  aws-ecr: circleci/aws-ecr@7.3.0
+  # aws-ecr: circleci/aws-ecr@7.3.0
+
+executors:
+  python-executor:
+    docker:
+      - image: cimg/python:3.11
 
 jobs:
   run_python_test:
-    executor: python/default
-    # working_directory: /lambda_functions/spotify_daily
+    executor: python-executor
     steps:
       - checkout
-      # - python/install-packages:
-      #     pkg-manager: pip
       - run:
           name: Run tests
           command: |
@@ -21,18 +24,25 @@ jobs:
             python -m pytest
 
   deploy_infra_basestack:
-    executor: python/default
+    docker:
+        - image: cimg/python:3.11-node
+          user: root
     steps:
-      - attach_workspace:
-          at: ~/infra
+      - checkout
+      - run:
+          name: Install AWS CDK
+          command: npm install -g aws-cdk
       - run:
           name: Deploy BaseStack
           command: |
             cd infra
+            echo "Install Python requirements"
             pip install -r requirements.txt
+            echo "Deployment with CDK"
             cdk synth
             cdk diff
             cdk deploy BaseStack
+
 
 
 workflows:
@@ -42,6 +52,6 @@ workflows:
       - deploy_infra_basestack:
           requires:
             - run_python_test
-          filters:
-            branches:
-              only: main
+          # filters:
+          #   branches:
+          #     only: main
