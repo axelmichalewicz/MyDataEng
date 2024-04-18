@@ -8,17 +8,17 @@ orbs:
 jobs:
   run_python_test:
     executor: python/default
+    # working_directory: /lambda_functions/spotify_daily
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
+      # - python/install-packages:
+      #     pkg-manager: pip
       - run:
           name: Run tests
-          command: python -m pytest
-      - persist_to_workspace:
-          root: ~/lambda_functions/spotify_daily
-          paths:
-            - .
+          command: |
+            cd lambda_functions/spotify_daily
+            pip install -r requirements.txt
+            python -m pytest
 
   deploy_infra_basestack:
     executor: python/default
@@ -29,13 +29,14 @@ jobs:
           name: Deploy BaseStack
           command: |
             cd infra
+            pip install -r requirements.txt
             cdk synth
             cdk diff
             cdk deploy BaseStack
 
 
 workflows:
-  test_my_app:
+  deploy_my_dataeng_project:
     jobs:
       - run_python_test
       - deploy_infra_basestack:
