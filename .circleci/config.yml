@@ -4,12 +4,15 @@ orbs:
   # python: circleci/python@2.1.1
   # node: circleci/node@5.2.0
   aws-cli: circleci/aws-cli@4.1.3
-  # aws-ecr: circleci/aws-ecr@7.3.0
+  aws-ecr: circleci/aws-ecr@7.3.0
 
 executors:
   python-executor:
     docker:
       - image: cimg/python:3.11
+  base-executor:
+    docker:
+      - image: cimg/base:current
 
 jobs:
   run_python_test:
@@ -45,8 +48,53 @@ jobs:
             echo "Deployment with CDK"
             cdk synth
             cdk diff
-            cdk deploy BaseStack
+            cdk deploy BaseStack --require-approval never --ci --progress events
 
+  deploy_lambda_images_to_ecr:
+    executor: base-executor
+    steps:
+      - aws-ecr/build_and_push_image:
+          account_id: ${AWS_ACCOUNT_ID}
+          auth:
+            - aws-cli/setup:
+                aws_access_key_id: $AWS_ACCESS_KEY_ID
+                aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+                region: $AWS_REGION
+          region: $AWS_REGION
+          create_repo: false
+          dockerfile: Dockerfile
+          extra_build_args: '--progress plain'
+          path: lambda_functions/spotify_daily
+          public_registry: false
+          push_image: true
+          repo: repo-spotify-recommandation-${ENV}
+          repo_scan_on_push: true
+          skip_when_tags_exist: false
+          tag: latest
+
+  deploy_infra_mainstack:
+      docker:
+          - image: cimg/python:3.11-node
+            user: root
+      steps:
+        - checkout
+        - aws-cli/setup:
+            aws_access_key_id: $AWS_ACCESS_KEY_ID
+            aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+            region: $AWS_REGION
+        - run:
+            name: Install AWS CDK
+            command: npm install -g aws-cdk
+        - run:
+            name: Deploy BaseStack
+            command: |
+              cd infra
+              echo "Install Python requirements"
+              pip install -r requirements.txt
+              echo "Deployment with CDK"
+              cdk synth
+              cdk diff
+              cdk deploy --all --require-approval never --ci --progress events
 
 
 workflows:
@@ -59,3 +107,10 @@ workflows:
           # filters:
           #   branches:
           #     only: main
+      - deploy_lambda_images_to_ecr:
+          requires:
+              - deploy_infra_basestack
+      - deploy_infra_mainstack:
+          requires:
+              - deploy_lambda_images_to_ecr
+
