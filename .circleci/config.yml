@@ -56,6 +56,10 @@ jobs:
       DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
       - aws-ecr/build_and_push_image:
+          build_path: lambda_functions/spotify_daily/
+          setup_remote_docker: true
+          remote_docker_layer_caching: true
+          remote_docker_version: default
           account_id: ${AWS_ACCOUNT_ID}
           auth:
             - aws-cli/setup:
