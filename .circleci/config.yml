@@ -50,6 +50,10 @@ jobs:
 
   deploy_lambda_images_to_ecr:
     executor: base-executor
+    environment:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
       - aws-ecr/build_and_push_image:
           account_id: ${AWS_ACCOUNT_ID}
