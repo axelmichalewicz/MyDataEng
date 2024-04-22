@@ -110,13 +110,19 @@ workflows:
       - deploy_infra_basestack:
           requires:
             - run_python_test
-          # filters:
-          #   branches:
-          #     only: main
+          filters:
+            branches:
+              only: main
       - deploy_lambda_images_to_ecr:
           requires:
               - deploy_infra_basestack
+          filters:
+            branches:
+              only: main
       - deploy_infra_mainstack:
           requires:
               - deploy_lambda_images_to_ecr
+          filters:
+            branches:
+              only: main
 
