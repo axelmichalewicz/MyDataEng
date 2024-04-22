@@ -1,0 +1,128 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@4.1.3
+  aws-ecr: circleci/aws-ecr@9.0.4
+
+executors:
+  python-executor:
+    docker:
+      - image: cimg/python:3.11
+  base-executor:
+    docker:
+      - image: cimg/base:current
+
+jobs:
+  run_python_test:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: |
+            cd lambda_functions/spotify_daily
+            pip install -r requirements.txt
+            python -m pytest
+
+  deploy_infra_basestack:
+    docker:
+        - image: cimg/python:3.11-node
+          user: root
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+          region: $AWS_REGION
+      - run:
+          name: Install AWS CDK
+          command: npm install -g aws-cdk
+      - run:
+          name: Deploy BaseStack
+          command: |
+            cd infra
+            echo "Install Python requirements"
+            pip install -r requirements.txt
+            echo "Deployment with CDK"
+            cdk synth
+            cdk diff
+            cdk deploy BaseStack --require-approval never --ci --progress events
+
+  deploy_lambda_images_to_ecr:
+    executor: base-executor
+    environment:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - aws-ecr/build_and_push_image:
+          build_path: lambda_functions/spotify_daily/
+          setup_remote_docker: true
+          remote_docker_layer_caching: true
+          remote_docker_version: default
+          account_id: ${AWS_ACCOUNT_ID}
+          auth:
+            - aws-cli/setup:
+                aws_access_key_id: $AWS_ACCESS_KEY_ID
+                aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+                region: $AWS_REGION
+          region: $AWS_REGION
+          create_repo: false
+          dockerfile: Dockerfile
+          extra_build_args: '--progress plain'
+          path: lambda_functions/spotify_daily
+          public_registry: false
+          push_image: true
+          repo: repo-spotify-recommandation-${ENV}
+          repo_scan_on_push: true
+          skip_when_tags_exist: false
+          tag: latest
+
+  deploy_infra_mainstack:
+      docker:
+          - image: cimg/python:3.11-node
+            user: root
+      steps:
+        - checkout
+        - aws-cli/setup:
+            aws_access_key_id: $AWS_ACCESS_KEY_ID
+            aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+            region: $AWS_REGION
+        - run:
+            name: Install AWS CDK
+            command: npm install -g aws-cdk
+        - run:
+            name: Deploy BaseStack
+            command: |
+              cd infra
+              echo "Install Python requirements"
+              pip install -r requirements.txt
+              echo "Deployment with CDK"
+              cdk synth
+              cdk diff
+              cdk deploy --all --require-approval never --ci --progress events
+
+
+workflows:
+  deploy_my_dataeng_project:
+    jobs:
+      - run_python_test
+      - deploy_infra_basestack:
+          requires:
+            - run_python_test
+          filters:
+            branches:
+              only: main
+      - deploy_lambda_images_to_ecr:
+          requires:
+              - deploy_infra_basestack
+          filters:
+            branches:
+              only: main
+      - deploy_infra_mainstack:
+          requires:
+              - deploy_lambda_images_to_ecr
+          filters:
+            branches:
+              only: main
+
