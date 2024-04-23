@@ -1,0 +1,61 @@
+name: GitHub Actions checks
+
+run-name: ${{ github.actor }} is checking linting and formating in order to merge Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: .
+
+env:
+  EXCLUDE: ".git,__pycache__,__init__.py,.mypy_cache,.pytest_cache,.venv,.env,.json,env"
+
+jobs:
+
+  Linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install flake8
+        run: pip3 install flake8
+      - name: Lint with flake8
+        id: flake8
+        run: flake8 --count --select=ANN,B,B9,BLK,C,E,F,S,W --max-complexity=19 --max-line-length=120 --exclude=$EXCLUDE --show-source --statistics ./infra/ ./lambda_functions/
+      - run: echo "🍏 This Linting job's status is ${{ job.status }}."
+
+  Black-Formating:
+    needs: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formating with Black
+        id: black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose --line-length=120 --include='.py$' --exclude=$EXCLUDE_BLACK"
+          src: "./infra ./lambda_functions/"
+          version: "~= 24.4"
+      - run: echo "🍏 This Formating job's status is ${{ job.status }}."
+
+  isort-Check:
+    needs: Black-Formating
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install isort
+        run: pip3 install isort
+      - name: Sort import
+        id: isort
+        run: isort . --profile=black --skip=$EXCLUDE --check-only
+      - run: echo "🍏 This isort job's status is ${{ job.status }}."
