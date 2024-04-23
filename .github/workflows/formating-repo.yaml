@@ -15,26 +15,13 @@ env:
   EXCLUDE: ".git,__pycache__,__init__.py,.mypy_cache,.pytest_cache,.venv,.env,.json,env"
 
 jobs:
-  Black-Formating:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check formating with Black
-        id: black
-        uses: psf/black@stable
-        with:
-          options: "--check --verbose --line-length=120 --include='.py$' --exclude=$EXCLUDE_BLACK"
-          src: "./infra ./lambda_functions/"
-          version: "~= 22.0"
-      - run: echo "🍏 This Formating job's status is ${{ job.status }}."
 
   Linting:
-    needs: Black-Formating
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
       - name: Install flake8
@@ -44,13 +31,26 @@ jobs:
         run: flake8 --count --select=ANN,B,B9,BLK,C,E,F,S,W --max-complexity=19 --max-line-length=120 --exclude=$EXCLUDE --show-source --statistics ./infra/ ./lambda_functions/
       - run: echo "🍏 This Linting job's status is ${{ job.status }}."
 
-
-  isort-Check:
+  Black-Formating:
     needs: Linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - name: Check formating with Black
+        id: black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose --line-length=120 --include='.py$' --exclude=$EXCLUDE_BLACK"
+          src: "./infra ./lambda_functions/"
+          version: "~= 24.4"
+      - run: echo "🍏 This Formating job's status is ${{ job.status }}."
+
+  isort-Check:
+    needs: Black-Formating
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.11
       - name: Install isort
