@@ -11,7 +11,8 @@ def test_ecr_created():
     template = assertions.Template.from_stack(stack)
 
     template.has_resource_properties(
-        "AWS::ECR::Repository", {"RepositoryName": f"repo-spotify-recommandation-{config('ENV')}"}
+        "AWS::ECR::Repository",
+        {"RepositoryName": f"repo-spotify-recommandation-{config('ENV')}"},
     )
 
 
@@ -22,7 +23,8 @@ def test_lambdas_created():
 
     template.resource_count_is("AWS::Lambda::Function", 1)
     template.has_resource_properties(
-        "AWS::Lambda::Function", {"FunctionName": f"spotify-recommandations-{config('ENV')}"}
+        "AWS::Lambda::Function",
+        {"FunctionName": f"spotify-recommandations-{config('ENV')}"},
     )
 
 
