@@ -23,18 +23,27 @@ class Spotify:
         }
         url = "https://accounts.spotify.com"
         response = APIRequest(base_url=url).request(
-            method=HttpMethodEnum.POST, endpoint="/api/token", headers=HEADERS, params=params
+            method=HttpMethodEnum.POST,
+            endpoint="/api/token",
+            headers=HEADERS,
+            params=params,
         )
         token = response.json()
         return SpotifyToken(access_token=token.get("access_token"), token_type=token.get("token_type"))
 
     def get_recommandation(self, market: str, genre: str) -> list:
         token = self.get_spotify_token()
-        HEADERS = {"Authorization": f"{token.token_type} {token.access_token}", "Content-Type": "application/json"}
+        HEADERS = {
+            "Authorization": f"{token.token_type} {token.access_token}",
+            "Content-Type": "application/json",
+        }
         params = {"limit": 10, "market": market, "seed_genres": genre}
         url = "https://api.spotify.com"
         response = APIRequest(base_url=url).request(
-            method=HttpMethodEnum.GET, endpoint="/v1/recommendations", headers=HEADERS, params=params
+            method=HttpMethodEnum.GET,
+            endpoint="/v1/recommendations",
+            headers=HEADERS,
+            params=params,
         )
         tracks = [track["external_urls"]["spotify"] for track in response.json()["tracks"]]
         return tracks

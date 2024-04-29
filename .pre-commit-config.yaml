@@ -14,23 +14,11 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.1
     hooks:
-      - id: flake8
-        entry: flake8
-        args: ["--config=lambda_functions/spotify_daily/.flake8"]
+      - id: ruff
+        args: ["--config=ruff.toml"]
+      - id: ruff-format
+        args: ["--config=ruff.toml"]
 
-
-  - repo: https://github.com/psf/black
-    rev: 22.6.0
-    hooks:
-      - id: black
-        args: [--line-length, '120', --include, '\.py$', --exclude, '/(\.git|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist|flake8-isort_build)/']
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: isort
-        args: ["--profile", "black"]

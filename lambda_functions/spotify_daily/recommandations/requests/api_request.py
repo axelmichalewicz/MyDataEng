@@ -1,6 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional
 
 import backoff
 import httpx
@@ -25,8 +25,8 @@ class APIRequest:
         self,
         method: HttpMethodEnum,
         endpoint: str = "",
-        headers: Optional[dict] = None,
-        params: Optional[dict] = None,
+        headers: dict | None = None,
+        params: dict | None = None,
         auth=None,
     ) -> httpx.Response:
         response = self.build_request_action(method)(
