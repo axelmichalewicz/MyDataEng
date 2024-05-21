@@ -1,0 +1,23 @@
+*.git
+*.vscode
+*.cache
+*.venv
+*.pyc
+*.DS_Store
+*.mypy_cache
+*.vscode
+*.pytest_cache
+*.dockerignore
+*.md
+*__pycache__/
+
+#tests
+tests
+
+# config
+.flake8
+.python_version
+
+# others
+*.gitignore
+docker-compose.yml

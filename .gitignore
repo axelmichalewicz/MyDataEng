@@ -13,12 +13,17 @@ __pycache__/
 
 # Environments
 .env
+airflow/.env
 .venv
 venv/
 ENV/
 env.bak/
 venv.bak/
+.python-version
 
 # CDK Context & Staging files
 .cdk.staging/
 cdk.out/
+
+# logs
+airflow/logs/
